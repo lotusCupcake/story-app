@@ -1,1 +1,13 @@
-if(!self.define){let e,i={};const n=(n,c)=>(n=new URL(n+".js",c).href,i[n]||new Promise((i=>{if("document"in self){const e=document.createElement("script");e.src=n,e.onload=i,document.head.appendChild(e)}else e=n,importScripts(n),i()})).then((()=>{let e=i[n];if(!e)throw new Error(`Module ${n} didn’t register its module`);return e})));self.define=(c,o)=>{const s=e||("document"in self?document.currentScript.src:"")||location.href;if(i[s])return;let t={};const r=e=>n(e,s),d={module:{uri:s},exports:t,require:r};i[s]=Promise.all(c.map((e=>d[e]||r(e)))).then((e=>(o(...e),t)))}}define(["./workbox-3bd99cbd"],(function(e){"use strict";self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"icons/add-shortcut.png",revision:"ee7f60e1be0cd4240eaace4c57f83db6"},{url:"icons/icon-128x128.png",revision:"2a3b50a7e5b4b3b6ededcf02508ab218"},{url:"icons/icon-512x512.png",revision:"fa2f92d4b407b762c945013193753c3b"},{url:"manifest.webmanifest",revision:"42d862e8a3677d25a748c832118289dc"}],{}),e.cleanupOutdatedCaches(),e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("index.html"))),e.registerRoute(/^https:\/\/story-api\.dicoding\.dev\/v1\/.*$/,new e.NetworkFirst({cacheName:"api-cache",plugins:[]}),"GET"),e.registerRoute(/\.(?:png|jpg|jpeg|svg|gif)$/,new e.CacheFirst({cacheName:"image-cache",plugins:[]}),"GET")}));
+self.addEventListener("push", function (event) {
+  let data = {};
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (e) {
+    data = {};
+  }
+  const title = data.title || "Notifikasi";
+  const options = data.options || { body: "Anda mendapatkan notifikasi baru." };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
