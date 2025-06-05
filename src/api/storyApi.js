@@ -2,6 +2,20 @@ const BASE_URL = "https://story-api.dicoding.dev/v1";
 
 const getToken = () => localStorage.getItem("token");
 
+const VAPID_PUBLIC_KEY =
+  "BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmtrx8biyPi_E-1fSGABK_Qs_GlvPoJJqxbk";
+
+const urlBase64ToUint8Array = (base64String) => {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+};
+
 export default {
   async login(email, password) {
     const res = await fetch(`${BASE_URL}/login`, {
@@ -52,5 +66,51 @@ export default {
     });
     if (!res.ok) throw new Error("Gagal menambah cerita");
     return res.json();
+  },
+
+  async subscribePushNotification() {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+      const token = getToken();
+
+      const body = JSON.stringify({
+        endpoint: subscription.endpoint,
+        keys: subscription.toJSON().keys,
+      });
+
+      const res = await fetch(`${BASE_URL}/notifications/subscribe`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body,
+      });
+      if (!res.ok) throw new Error("Gagal subscribe notifikasi");
+      return res.json();
+    } else {
+      throw new Error("Browser tidak mendukung Push API");
+    }
+  },
+
+  async unsubscribePushNotification() {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) {
+      const token = getToken();
+      await fetch(`${BASE_URL}/notifications/subscribe`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      });
+      await subscription.unsubscribe();
+    }
   },
 };
