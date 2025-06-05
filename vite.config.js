@@ -16,9 +16,7 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: "autoUpdate",
-      outDir: resolve(__dirname, "public"),
       injectRegister: "auto",
-      srcDir: "public",
       filename: "sw.js",
       manifest: {
         name: "Story App",
